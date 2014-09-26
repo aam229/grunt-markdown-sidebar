@@ -2,7 +2,7 @@ var fs = require("fs");
 
 module.exports = function(grunt){
 
-    function generate(path) {
+    function generate(path, separator) {
         var files = fs.readdirSync(path),
             structure = {};
         for(var i = 0; i < files.length; i++){
@@ -12,15 +12,15 @@ module.exports = function(grunt){
             if(files[i].indexOf(".md") === -1){
                 continue;
             }
-            addFile(files[i], structure);
+            addFile(files[i], structure, separator);
         }
 
         fs.writeFileSync(path + "/_Sidebar.md", generateMarkdown(structure));
     }
 
-    function addFile(fileName, structure){
+    function addFile(fileName, structure, separator){
         var parts, name, part;
-        parts = fileName.split("|");
+        parts = fileName.split(separator);
         name = parts.pop();
         while(parts.length > 0){
             part = parts.shift();
@@ -43,7 +43,7 @@ module.exports = function(grunt){
     }
 
     function generateMarkdown(structure, path){
-        var str = "", folders = [], folderStructure;
+        var str = "", folders = [], folderStructure, name;
         path || (path = []);
         if(structure.files){
             structure.files.sort();
@@ -51,7 +51,12 @@ module.exports = function(grunt){
                 if(structure.files[i].charAt(0) === "_"){
                     continue;
                 }
-                str += tabs(path.length) + " * [" + cleanName(structure.files[i]) + "](./" + fileName(path, structure.files[i]) + ")\n";
+                name = cleanName(structure.files[i]);
+                if(structure.folders && structure.folders[name]){
+                    structure.folders[name].index = "";
+                    continue;
+                }
+                str += tabs(path.length) + " * [" + name + "](./" + fileName(path, structure.files[i]) + ")\n";
             }
         }
         if(structure.folders){
@@ -62,7 +67,7 @@ module.exports = function(grunt){
             for(var i = 0; i < folders.length; i++){
                 folderStructure = structure.folders[folders[i]];
                 path.push(folders[i]);
-                if(folderStructure.index){
+                if(folderStructure.index !== undefined){
                     str += tabs(path.length-1) + " * [" +folders[i] + "](./" + fileName(path, folderStructure.index) + ")\n";
                 }else{
                     str += tabs(path.length-1) + " * " + folders[i] + "\n";
@@ -75,10 +80,13 @@ module.exports = function(grunt){
     }
 
     function fileName(path, name){
-        return ((path.length > 0) ? path.join("|") + "|" : "") + cleanName(name);
+        return ((path.length > 0) ? path.join("|") : "") + (path.length > 0 && name ? "|" : "") + cleanName(name);
     }
 
     function cleanName(name){
+        if(!name){
+            return name;
+        }
         return name.substring(0, name.indexOf(".md"));
     }
 
@@ -94,13 +102,14 @@ module.exports = function(grunt){
     grunt.registerMultiTask('markdown-sidebar', 'Generate a markdown sidebar based on a directory content.', function() {
         // Merge task-specific and/or target-specific options with these defaults.
         var options = {
-            src: this.data.src
+            src: this.data.src,
+            separator: this.data.separator || "|"
         };
         if(!options.src){
             grunt.log.error("You must specify a src option");
             return false;
         }
-        generate(options.src);
+        generate(options.src, options.separator);
         grunt.log.ok("The file '" + options.src + "/_Sidebar.rm' was successfully generated");
     });
 };
