@@ -39,6 +39,7 @@ Add the plugin's configuration to your `Gruntfile`:
 grunt.initConfig({
   "markdown-sidebar": {
      src: "path/to/input"
+     separator: "|", //The character used to separate directory/file names
   }
 });
 //Add task

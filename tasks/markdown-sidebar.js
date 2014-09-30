@@ -42,7 +42,7 @@ module.exports = function(grunt){
         }
     }
 
-    function generateMarkdown(structure, path){
+    function generateMarkdown(structure, path, separator){
         var str = "", folders = [], folderStructure, name;
         path || (path = []);
         if(structure.files){
@@ -56,7 +56,7 @@ module.exports = function(grunt){
                     structure.folders[name].index = "";
                     continue;
                 }
-                str += tabs(path.length) + " * [" + name + "](./" + fileName(path, structure.files[i]) + ")\n";
+                str += tabs(path.length) + " * [" + name + "](./" + fileName(path, structure.files[i], separator) + ")\n";
             }
         }
         if(structure.folders){
@@ -68,19 +68,19 @@ module.exports = function(grunt){
                 folderStructure = structure.folders[folders[i]];
                 path.push(folders[i]);
                 if(folderStructure.index !== undefined){
-                    str += tabs(path.length-1) + " * [" +folders[i] + "](./" + fileName(path, folderStructure.index) + ")\n";
+                    str += tabs(path.length-1) + " * [" +folders[i] + "](./" + fileName(path, folderStructure.index, separator) + ")\n";
                 }else{
                     str += tabs(path.length-1) + " * " + folders[i] + "\n";
                 }
-                str += generateMarkdown(structure.folders[folders[i]], path);
+                str += generateMarkdown(structure.folders[folders[i]], path, separator);
                 path.pop();
             }
         }
         return str;
     }
 
-    function fileName(path, name){
-        return ((path.length > 0) ? path.join("|") : "") + (path.length > 0 && name ? "|" : "") + cleanName(name);
+    function fileName(path, name, separator){
+        return ((path.length > 0) ? path.join(separator) : "") + (path.length > 0 && name ? separator : "") + cleanName(name);
     }
 
     function cleanName(name){
